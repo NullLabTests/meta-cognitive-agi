@@ -31,6 +31,12 @@
 - **Resource Efficiency**: Entire framework runs on 8GB RAM, CPU-only, using only NumPy
 - **Testable Hypotheses**: Clear, falsifiable predictions with quantitative metrics
 - **Conceptual Compression**: Introduces information-theoretic efficiency as a key metric
+- **NEW:** **Arxiv-Inpired Features**: Implements cutting-edge research from recent arxiv papers:
+  - Meta-cognition lenses (entropy, maxprob, perplexity, delta-entropy) from "Large Language Models Have Intrinsic Meta-Cognition, but Need a Good Lens"
+  - Game theory self-awareness paradigm (Guess 2/3 of Average) from "LLMs Position Themselves as More Rational Than Humans"
+  - Stepwise state aggregation and intrinsic reward calculation
+  - Evaluation metrics (AUPR, AUROC, FPR95) for meta-cognitive abilities
+  - Recursive self-modeling for strategic reasoning
 
 ---
 
@@ -71,11 +77,14 @@
 
 ## 🧪 Testing
 
-The project includes a comprehensive test suite to verify functionality:
+The project includes comprehensive test suites to verify functionality:
 
 ```bash
-# Run all tests
+# Run core tests
 python test_agent.py
+
+# Run enhanced feature tests (arxiv-inspired features)
+python test_enhanced_features.py
 ```
 
 **Test Coverage:**
@@ -87,6 +96,13 @@ python test_agent.py
 - Improvement generation
 - Save/load functionality
 - Full experiment pipeline
+- **NEW:** Meta-cognition lenses (entropy, maxprob, perplexity, delta-entropy)
+- **NEW:** Intrinsic reward calculation
+- **NEW:** Stepwise state aggregation
+- **NEW:** Meta-cognition metrics (AUPR, AUROC, FPR95)
+- **NEW:** Game theory self-awareness (Guess 2/3 of Average)
+- **NEW:** Strategic reasoning evaluation
+- **NEW:** Recursive self-modeling
 
 All tests currently pass ✓
 

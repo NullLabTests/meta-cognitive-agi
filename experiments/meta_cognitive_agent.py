@@ -1,12 +1,23 @@
 """
 Meta-Cognitive Agent Implementation
 A minimal AI system with self-reflection capabilities using only NumPy
+Enhanced with features from arxiv research on meta-cognition and self-awareness
 """
 
 import numpy as np
 from typing import Tuple, List, Dict, Optional
 from dataclasses import dataclass
 import json
+
+# Import new meta-cognition features
+from .meta_cognition_lenses import (
+    MetaCognitionLens, InternalState, MetaCognitionLensEvaluator,
+    StepwiseStateAggregator, IntrinsicRewardCalculator, MetaCognitionMetrics
+)
+from .game_theory_self_awareness import (
+    GuessTwoThirdsGame, RationalityLevel, OpponentType,
+    StrategicReasoningEvaluator, RecursiveSelfModeling
+)
 
 
 @dataclass
@@ -59,6 +70,20 @@ class MetaCognitiveLayer:
         # Training history
         self.training_history = []
         self.self_awareness_history = []
+        
+        # Enhanced meta-cognition features (from arxiv research)
+        self.lens_evaluator = MetaCognitionLensEvaluator()
+        self.reward_calculator = IntrinsicRewardCalculator()
+        self.state_aggregator = StepwiseStateAggregator()
+        self.metrics_calculator = MetaCognitionMetrics()
+        
+        # Game theory self-awareness
+        self.game_theory = GuessTwoThirdsGame()
+        self.strategic_evaluator = StrategicReasoningEvaluator()
+        self.recursive_modeling = RecursiveSelfModeling()
+        
+        # Track internal states for meta-cognition evaluation
+        self.internal_states_history = []
         
     def relu(self, x: np.ndarray) -> np.ndarray:
         """ReLU activation function"""
@@ -255,6 +280,75 @@ class MetaCognitiveLayer:
         self.self_awareness_history.append(metrics['self_awareness'])
         
         return metrics
+    
+    def extract_internal_state(self, x: np.ndarray) -> InternalState:
+        """
+        Extract internal state for meta-cognitive evaluation
+        Based on methodology from "Large Language Models Have Intrinsic Meta-Cognition"
+        """
+        # Forward pass to get internal representations
+        h1 = self.relu(np.dot(x, self.W1) + self.b1)
+        h2 = self.relu(np.dot(h1, self.W2) + self.b2)
+        
+        # Use hidden states as internal representation
+        hidden_states = h2  # Shape: (batch, hidden_dim)
+        
+        # Generate logits (simulated output layer)
+        logits = np.dot(h2, self.W_out) + self.b_out
+        
+        # Convert to probabilities
+        exp_logits = np.exp(logits - np.max(logits, axis=-1, keepdims=True))
+        probabilities = exp_logits / np.sum(exp_logits, axis=-1, keepdims=True)
+        
+        # Calculate confidence from system selection
+        meta = self.relu(np.dot(np.concatenate([h1, h2], axis=-1), self.W_meta) + self.b_meta)
+        selection_logits = np.dot(meta, self.W_select) + self.b_select
+        selection_probs = self.softmax(selection_logits)
+        confidence = float(np.max(selection_probs))
+        
+        return InternalState(
+            hidden_states=hidden_states,
+            logits=logits,
+            probabilities=probabilities,
+            confidence=confidence
+        )
+    
+    def evaluate_with_meta_cognition_lenses(self, x: np.ndarray, target: np.ndarray) -> Dict[str, float]:
+        """
+        Evaluate using multiple meta-cognition lenses
+        Returns confidence scores from different lenses
+        """
+        state = self.extract_internal_state(x)
+        
+        lens_results = {}
+        for lens in MetaCognitionLens:
+            lens_results[lens.value] = self.lens_evaluator.evaluate_with_lens(state, lens)
+        
+        # Store internal state for tracking
+        self.internal_states_history.append(state)
+        
+        return lens_results
+    
+    def calculate_intrinsic_reward(self, x: np.ndarray, lens: MetaCognitionLens) -> float:
+        """
+        Calculate intrinsic reward using a specific meta-cognition lens
+        """
+        state = self.extract_internal_state(x)
+        return self.lens_evaluator.evaluate_with_lens(state, lens)
+    
+    def evaluate_game_theory_self_awareness(self, guess: float, opponent_type: OpponentType) -> Dict[str, float]:
+        """
+        Evaluate self-awareness using game theory paradigm
+        Based on "LLs Position Themselves as More Rational Than Humans"
+        """
+        self_awareness = self.game_theory.calculate_self_awareness_score(guess, opponent_type)
+        rationality = self.game_theory.determine_rationality_level(guess)
+        
+        return {
+            'self_awareness_score': self_awareness,
+            'rationality_level': rationality.value,
+            'guess': guess
+        }
 
 
 class MetaCognitiveAgent:
@@ -335,6 +429,55 @@ class MetaCognitiveAgent:
         
         return np.mean(meta_reasoning_scores)
     
+    def evaluate_with_lenses(self, X_test: np.ndarray, y_test: np.ndarray) -> Dict[str, Dict[str, float]]:
+        """
+        Evaluate using all meta-cognition lenses
+        Returns nested dict of lens results for each sample
+        """
+        all_lens_results = {}
+        
+        for i in range(len(X_test)):
+            lens_results = self.meta_layer.evaluate_with_meta_cognition_lenses(X_test[i:i+1], y_test[i:i+1])
+            all_lens_results[f'sample_{i}'] = lens_results
+        
+        # Aggregate across samples
+        aggregated = {}
+        for lens in MetaCognitionLens:
+            values = [all_lens_results[f'sample_{i}'][lens.value] for i in range(len(X_test))]
+            aggregated[lens.value] = {
+                'mean': np.mean(values),
+                'std': np.std(values),
+                'min': np.min(values),
+                'max': np.max(values)
+            }
+        
+        return aggregated
+    
+    def evaluate_game_theory_awareness(self, guesses: List[float], 
+                                     opponent_type: OpponentType) -> Dict[str, float]:
+        """
+        Evaluate self-awareness using game theory paradigm
+        """
+        profile = self.meta_layer.strategic_evaluator.evaluate_agent_strategic_reasoning(
+            guesses, opponent_type
+        )
+        return profile
+    
+    def calculate_meta_cognition_metrics(self, confidence_scores: List[float], 
+                                       correctness_labels: List[int]) -> Dict[str, float]:
+        """
+        Calculate meta-cognition evaluation metrics (AUPR, AUROC, FPR95)
+        """
+        aupr = self.meta_layer.metrics_calculator.calculate_aupr(confidence_scores, correctness_labels)
+        auroc = self.meta_layer.metrics_calculator.calculate_auroc(confidence_scores, correctness_labels)
+        fpr95 = self.meta_layer.metrics_calculator.calculate_fpr95(confidence_scores, correctness_labels)
+        
+        return {
+            'aupr': aupr,
+            'auroc': auroc,
+            'fpr95': fpr95
+        }
+    
     def get_performance_summary(self) -> Dict[str, float]:
         """Get summary of agent performance"""
         if not self.meta_layer.training_history:
@@ -366,7 +509,8 @@ class MetaCognitiveAgent:
             'W_select': self.meta_layer.W_select.tolist(),
             'b_select': self.meta_layer.b_select.tolist(),
             'training_history': self.meta_layer.training_history,
-            'refinement_cycles': self.refinement_cycles
+            'refinement_cycles': self.refinement_cycles,
+            'internal_states_history': len(self.meta_layer.internal_states_history)
         }
         
         with open(filepath, 'w') as f:
