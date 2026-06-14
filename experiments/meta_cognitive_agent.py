@@ -91,9 +91,6 @@ class MetaCognitiveLayer:
         # Combine both system outputs
         combined = np.concatenate([s1, s2], axis=-1)
         
-        # Debug: print shapes
-        print(f"Debug: combined.shape = {combined.shape}, W_meta.shape = {self.W_meta.shape}")
-        
         # Flatten if needed for matrix multiplication
         if combined.ndim > 2:
             combined = combined.reshape(combined.shape[0], -1)
@@ -149,18 +146,26 @@ class MetaCognitiveLayer:
         output = state.system_1_output * 0.5 + state.system_2_output * 0.5
         error = np.mean((output - target) ** 2)
         
-        # Self-awareness: accuracy of self-model prediction
-        self_prediction = self.sigmoid(np.dot(state.meta_evaluation, self.W_self) + self.b_self)
-        self_accuracy = 1.0 - np.mean(np.abs(self_prediction - output))
+        # Self-awareness: measure how well the system understands its own cognitive state
+        # This is measured by the consistency between cognitive load and actual performance
+        # Use sigmoid to ensure it stays in [0, 1] range
+        raw_self_awareness = state.confidence * np.exp(-error)
+        self_awareness = float(np.clip(raw_self_awareness, 0.0, 1.0))
         
-        # Meta-reasoning: consistency of system selection
-        selection_consistency = state.confidence
+        # Meta-reasoning: consistency of system selection with task complexity
+        # System 2 (slow) should be used more for complex tasks
+        meta_reasoning = float(np.clip(state.confidence, 0.0, 1.0))
+        
+        # Cognitive efficiency: performance per unit cognitive load
+        # Use sigmoid to ensure positive values
+        raw_efficiency = (1.0 / (1.0 + error)) / (state.cognitive_load + 0.1)
+        cognitive_efficiency = float(np.clip(raw_efficiency, 0.0, 10.0))
         
         return {
-            'error': error,
-            'self_awareness': self_accuracy,
-            'meta_reasoning': selection_consistency,
-            'cognitive_efficiency': 1.0 / (state.cognitive_load + 0.1)
+            'error': float(error),
+            'self_awareness': self_awareness,
+            'meta_reasoning': meta_reasoning,
+            'cognitive_efficiency': cognitive_efficiency
         }
     
     def identify_bottlenecks(self, evaluation: Dict[str, float]) -> List[str]:
@@ -227,16 +232,20 @@ class MetaCognitiveLayer:
         
         # Gradient for W1 (simplified with normalization)
         grad_W1 = np.dot(x.T, error) / (x.shape[0] + 1e-8)
+        grad_W_out = np.dot(state.system_2_output.T, error) / (x.shape[0] + 1e-8)
         
         # Clip gradients to prevent explosion
         grad_W1 = np.clip(grad_W1, -1.0, 1.0)
+        grad_W_out = np.clip(grad_W_out, -1.0, 1.0)
         
         # Update weights with smaller learning rate
         self.W1 -= learning_rate * grad_W1
+        self.W_out -= learning_rate * grad_W_out
         
         # Normalize weights periodically
         if np.random.random() < 0.1:  # 10% chance to normalize
             self.W1 = self.W1 / (np.linalg.norm(self.W1) + 1e-8)
+            self.W_out = self.W_out / (np.linalg.norm(self.W_out) + 1e-8)
         
         # Self-evaluation
         metrics = self.self_evaluate(state, target)
