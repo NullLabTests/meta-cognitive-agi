@@ -1,0 +1,22 @@
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+
+# Experiment results (optional - comment out if you want to track these)
+# meta_cognitive_agent_state.json
+# recursive_improvement_results.json
+
+# OS
+.DS_Store
+Thumbs.db
