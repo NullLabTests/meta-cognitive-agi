@@ -1,22 +1,23 @@
-# Python cache
+# Byte-compiled
 __pycache__/
 *.py[cod]
 *$py.class
-*.so
 
-# Virtual environments
+# Env
+.env
+.venv
 venv/
-env/
-ENV/
 
 # IDE
 .vscode/
 .idea/
-
-# Experiment results (optional - comment out if you want to track these)
-# meta_cognitive_agent_state.json
-# recursive_improvement_results.json
+*.swp
 
 # OS
 .DS_Store
 Thumbs.db
+
+# Build
+dist/
+build/
+*.egg-info/
